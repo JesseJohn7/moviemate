@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import Search from './components/Search'
+import Spinner from './components/Spinner';
+import MovieCard from './components/MovieCard';
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -18,11 +20,13 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [movielist, setMovieList] = useState([]);
   const [isLoading,setisLoading] = useState(false);
-  const fetchMovies = async () => {
+  const fetchMovies = async (query = '') => {
     setisLoading(true);
     setErrorMessage('')
     try {
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint = query
+      ?`${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      :`${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
       const response = await fetch(endpoint, API_OPTIONS);
       if (!response.ok) {
         throw new Error('Failed to fetch movies');
@@ -43,8 +47,8 @@ const App = () => {
   };
 
   useEffect(() => {
-    fetchMovies();
-  }, []);
+    fetchMovies(searchTerm);
+  }, [searchTerm]);
 
   return (
     <main>
@@ -52,13 +56,23 @@ const App = () => {
       <div className='wrapper'>
         <header>
           <img src="./hero.png" alt="hero banner" className="w-64 h-auto mx-auto" />
-          <h1>Find <span className='text-gradient'>Movies</span> Yoou'll Enjoy without the Hassle</h1>
+          <h1>Find <span className='text-gradient'>Movies</span> You'll Enjoy without the Hassle</h1>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
 
         <section className='all-movies'>
-          <h2>All Movies</h2>
-            
+          <h2 className='mt-[40px]'>All Movies</h2>
+            {isLoading ? (
+              <Spinner />
+            ) : errorMessage ? (
+              <p className='text-red-500'>{errorMessage}</p>
+            ) : (
+              <ul>
+                {movielist.map((movie) => (
+                  <MovieCard key={movie.id} movie={movie} />
+                ))}
+              </ul>
+            )}
         </section>
       </div>
     </main>
